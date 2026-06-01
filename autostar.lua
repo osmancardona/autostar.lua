@@ -1,8 +1,6 @@
--- Anime Astral Simulator | Auto Open Stars v4 Fix
 local LP = game:GetService("Players").LocalPlayer
 local PG = LP:WaitForChild("PlayerGui")
 local UIS = game:GetService("UserInputService")
-
 local autoOn, count, minimized = false, 0, false
 
 local ISLANDS = {
@@ -19,7 +17,6 @@ local ISLANDS = {
 local old = PG:FindFirstChild("AutoStarV4")
 if old then old:Destroy() end
 
--- Click botones del juego
 local function clickOpen()
     pcall(function()
         PG.Windows.Star.Content.Buttons.Open.MouseButton1Click:Fire()
@@ -34,11 +31,9 @@ end
 
 -- GUI
 local gui = Instance.new("ScreenGui", PG)
-gui.Name = "AutoStarV4"
-gui.ResetOnSpawn = false
-gui.DisplayOrder = 999
+gui.Name, gui.ResetOnSpawn, gui.DisplayOrder = "AutoStarV4", false, 999
 
--- ICONO flotante (TextButton para poder usar Text)
+-- Icono flotante
 local icon = Instance.new("TextButton", gui)
 icon.Size = UDim2.new(0,48,0,48)
 icon.Position = UDim2.new(0,20,0.5,0)
@@ -50,11 +45,8 @@ icon.TextColor3 = Color3.fromRGB(15,15,25)
 icon.BorderSizePixel = 0
 icon.Visible = false
 Instance.new("UICorner", icon).CornerRadius = UDim.new(0.5,0)
-local iconStroke = Instance.new("UIStroke", icon)
-iconStroke.Color = Color3.fromRGB(255,255,255)
-iconStroke.Thickness = 2
 
--- FRAME PRINCIPAL
+-- Frame principal
 local f = Instance.new("Frame", gui)
 f.Size = UDim2.new(0,260,0,430)
 f.Position = UDim2.new(0,20,0.08,0)
@@ -65,14 +57,14 @@ local fStroke = Instance.new("UIStroke", f)
 fStroke.Color = Color3.fromRGB(255,200,0)
 fStroke.Thickness = 2
 
--- TÍTULO
-local titleBar = Instance.new("Frame", f)
-titleBar.Size = UDim2.new(1,0,0,40)
-titleBar.BackgroundColor3 = Color3.fromRGB(255,180,0)
-titleBar.BorderSizePixel = 0
-Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0,12)
+-- TitleBar
+local tb = Instance.new("Frame", f)
+tb.Size = UDim2.new(1,0,0,40)
+tb.BackgroundColor3 = Color3.fromRGB(255,180,0)
+tb.BorderSizePixel = 0
+Instance.new("UICorner", tb).CornerRadius = UDim.new(0,12)
 
-local titleLbl = Instance.new("TextLabel", titleBar)
+local titleLbl = Instance.new("TextLabel", tb)
 titleLbl.Size = UDim2.new(1,-80,1,0)
 titleLbl.Position = UDim2.new(0,10,0,0)
 titleLbl.BackgroundTransparency = 1
@@ -81,8 +73,7 @@ titleLbl.TextColor3 = Color3.fromRGB(15,15,25)
 titleLbl.TextScaled = true
 titleLbl.Font = Enum.Font.GothamBold
 
--- Botón minimizar
-local minBtn = Instance.new("TextButton", titleBar)
+local minBtn = Instance.new("TextButton", tb)
 minBtn.Size = UDim2.new(0,28,0,28)
 minBtn.Position = UDim2.new(1,-66,0,6)
 minBtn.BackgroundColor3 = Color3.fromRGB(50,50,80)
@@ -93,8 +84,7 @@ minBtn.Font = Enum.Font.GothamBold
 minBtn.BorderSizePixel = 0
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0,6)
 
--- Botón cerrar
-local closeBtn = Instance.new("TextButton", titleBar)
+local closeBtn = Instance.new("TextButton", tb)
 closeBtn.Size = UDim2.new(0,28,0,28)
 closeBtn.Position = UDim2.new(1,-34,0,6)
 closeBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
@@ -105,7 +95,7 @@ closeBtn.Font = Enum.Font.GothamBold
 closeBtn.BorderSizePixel = 0
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0,6)
 
--- CONTENIDO
+-- Contenido
 local content = Instance.new("Frame", f)
 content.Size = UDim2.new(1,0,1,-40)
 content.Position = UDim2.new(0,0,0,40)
@@ -119,8 +109,8 @@ local function lbl(parent, txt, y, col, sz)
     l.Font = Enum.Font.GothamBold
     l.Text = txt
     l.TextColor3 = col or Color3.fromRGB(255,220,80)
-    if sz then l.TextSize=sz l.TextScaled=false
-    else l.TextScaled=true end
+    if sz then l.TextSize = sz l.TextScaled = false
+    else l.TextScaled = true end
     return l
 end
 
@@ -136,7 +126,6 @@ sep.BorderSizePixel = 0
 
 lbl(content,"🗺️ SELECCIONAR ISLA:", 80, Color3.fromRGB(255,200,0), 12)
 
--- Scroll islas
 local scroll = Instance.new("ScrollingFrame", content)
 scroll.Size = UDim2.new(1,-10,0,175)
 scroll.Position = UDim2.new(0,5,0,98)
@@ -162,7 +151,6 @@ for i, island in ipairs(ISLANDS) do
     wb.BorderSizePixel = 0
     Instance.new("UICorner", wb).CornerRadius = UDim.new(0,6)
     if i==1 then selectedBtn = wb end
-
     wb.MouseButton1Click:Connect(function()
         if selectedBtn then
             selectedBtn.BackgroundColor3 = Color3.fromRGB(30,30,50)
@@ -172,11 +160,10 @@ for i, island in ipairs(ISLANDS) do
         wb.TextColor3 = Color3.fromRGB(15,15,25)
         selectedBtn = wb
         selectedIsland = island
-        islandLbl.Text = "Isla: " .. island.name
+        islandLbl.Text = "Isla: "..island.name
     end)
 end
 
--- Botones
 local function mkbtn(parent, txt, xScale, xOff, y, col)
     local b = Instance.new("TextButton", parent)
     b.Size = UDim2.new(0.47,0,0,34)
@@ -191,8 +178,8 @@ local function mkbtn(parent, txt, xScale, xOff, y, col)
     return b
 end
 
-local startBtn    = mkbtn(content,"▶ START",  0,    10, 282, Color3.fromRGB(40,180,80))
-local stopBtn     = mkbtn(content,"⏹ STOP",   0.52, -2, 282, Color3.fromRGB(200,50,50))
+local startBtn = mkbtn(content,"▶ START", 0, 10, 282, Color3.fromRGB(40,180,80))
+local stopBtn  = mkbtn(content,"⏹ STOP", 0.52,-2, 282, Color3.fromRGB(200,50,50))
 
 local autoGameBtn = Instance.new("TextButton", content)
 autoGameBtn.Size = UDim2.new(1,-10,0,30)
@@ -216,14 +203,12 @@ resetBtn.TextScaled = true
 resetBtn.BorderSizePixel = 0
 Instance.new("UICorner", resetBtn).CornerRadius = UDim.new(0,6)
 
--- DRAG frame principal
+-- Drag frame
 local drag, ds, dp = false
-titleBar.InputBegan:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1 then
-        drag,ds,dp = true,i.Position,f.Position
-    end
+tb.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then drag,ds,dp=true,i.Position,f.Position end
 end)
-titleBar.InputEnded:Connect(function(i)
+tb.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then drag=false end
 end)
 UIS.InputChanged:Connect(function(i)
@@ -233,12 +218,10 @@ UIS.InputChanged:Connect(function(i)
     end
 end)
 
--- DRAG icono
+-- Drag icono
 local idrag, ids, idp = false
 icon.InputBegan:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1 then
-        idrag,ids,idp = true,i.Position,icon.Position
-    end
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then idrag,ids,idp=true,i.Position,icon.Position end
 end)
 icon.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then idrag=false end
@@ -250,7 +233,7 @@ UIS.InputChanged:Connect(function(i)
     end
 end)
 
--- MINIMIZAR
+-- Botones lógica
 minBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
     content.Visible = not minimized
@@ -258,14 +241,12 @@ minBtn.MouseButton1Click:Connect(function()
     minBtn.Text = minimized and "▢" or "—"
 end)
 
--- CERRAR
 closeBtn.MouseButton1Click:Connect(function()
     autoOn = false
     f.Visible = false
     icon.Visible = true
 end)
 
--- RESTAURAR desde icono
 icon.MouseButton1Click:Connect(function()
     if not idrag then
         f.Visible = true
@@ -273,7 +254,6 @@ icon.MouseButton1Click:Connect(function()
     end
 end)
 
--- LÓGICA
 startBtn.MouseButton1Click:Connect(function()
     if autoOn then return end
     autoOn = true
