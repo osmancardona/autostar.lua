@@ -1,78 +1,75 @@
--- Anime Astral Simulator | Auto Open Stars
--- Uso: servidor privado unicamente
-
+-- Anime Astral Simulator | Auto Open Stars v3
+-- Con selector de mundo
 local RS = game:GetService("ReplicatedStorage")
 local UIS = game:GetService("UserInputService")
 local LP = game:GetService("Players").LocalPlayer
 
-local autoOn, delay, count = false, 0.2, 0
+local autoOn, delay, count = false, 0.3, 0
+local selectedWorld = "World1"
 
--- Detectar remote
-local remote
-for _, v in ipairs(RS:GetDescendants()) do
-    if (v:IsA("RemoteEvent") or v:IsA("RemoteFunction")) then
-        local n = v.Name:lower()
-        if n:find("star") or n:find("open") or n:find("roll") or n:find("summon") then
-            remote = v break
-        end
-    end
-end
+local Network = RS:WaitForChild("SimpleWorld")
+    :WaitForChild("Library")
+    :WaitForChild("Network")
+    :WaitForChild("Functions")
 
--- GUI
+local BuyTicket     = Network:WaitForChild("BuyWithTicket")
+local GetWorldsData = Network:WaitForChild("GetWorldsData")
+local GetCurrentWorld = Network:WaitForChild("GetCurrentWorld")
+
+-- Mundos disponibles (detectados)
+local WORLDS = {
+    {name = "🌍 World 1",  key = "World1"},
+    {name = "🌎 World 2",  key = "World2"},
+    {name = "🌏 World 3",  key = "World3"},
+    {name = "⚔️ Raids",    key = "RaidArenas"},
+    {name = "🛡️ Defense",  key = "DefenseArenas"},
+    {name = "⏱️ TimeTrial", key = "TimeTrialArenas"},
+    {name = "🐾 Pets",     key = "Pets"},
+    {name = "👹 Titans",   key = "Titans"},
+}
+
+-- ► GUI
+local oldGui = LP.PlayerGui:FindFirstChild("AutoStarV3")
+if oldGui then oldGui:Destroy() end
+
 local gui = Instance.new("ScreenGui", LP.PlayerGui)
-gui.ResetOnSpawn = false
+gui.Name, gui.ResetOnSpawn = "AutoStarV3", false
+
+-- Frame principal
 local f = Instance.new("Frame", gui)
-f.Size, f.Position = UDim2.new(0,240,0,160), UDim2.new(0,20,0.4,0)
-f.BackgroundColor3 = Color3.fromRGB(12,12,22)
-Instance.new("UICorner", f).CornerRadius = UDim.new(0,10)
-local stroke = Instance.new("UIStroke", f)
-stroke.Color, stroke.Thickness = Color3.fromRGB(255,200,0), 2
+f.Size = UDim2.new(0, 260, 0, 420)
+f.Position = UDim2.new(0, 20, 0.1, 0)
+f.BackgroundColor3 = Color3.fromRGB(12, 12, 22)
+f.BorderSizePixel = 0
+Instance.new("UICorner", f).CornerRadius = UDim.new(0, 12)
+local sk = Instance.new("UIStroke", f)
+sk.Color, sk.Thickness = Color3.fromRGB(255, 200, 0), 2
 
-local function lbl(txt, y, col)
-    local l = Instance.new("TextLabel", f)
-    l.Size, l.Position = UDim2.new(1,-10,0,22), UDim2.new(0,5,0,y)
-    l.BackgroundTransparency, l.TextScaled = 1, true
-    l.Font, l.Text = Enum.Font.GothamBold, txt
-    l.TextColor3 = col or Color3.fromRGB(255,220,80)
-    return l
-end
+-- Título
+local title = Instance.new("Frame", f)
+title.Size = UDim2.new(1, 0, 0, 38)
+title.BackgroundColor3 = Color3.fromRGB(255, 180, 0)
+title.BorderSizePixel = 0
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 12)
 
-local function btn(txt, y, col)
-    local b = Instance.new("TextButton", f)
-    b.Size, b.Position = UDim2.new(0.48,0,0,34), UDim2.new(y > 90 and 0.52 or 0,y > 90 and -2 or 0,0,y)
-    b.BackgroundColor3, b.TextColor3 = col, Color3.fromRGB(255,255,255)
-    b.Text, b.TextScaled, b.Font = txt, true, Enum.Font.GothamBold
-    b.BorderSizePixel = 0
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0,7)
-    return b
-end
-
-lbl("⭐ AUTO OPEN STARS", 5, Color3.fromRGB(255,200,0))
-local status = lbl("Estado: Detenido", 30, Color3.fromRGB(180,180,180))
-local counter = lbl("Abiertos: 0", 54, Color3.fromRGB(255,220,80))
-local rname = lbl(remote and "Remote: "..remote.Name or "Remote: no encontrado", 76, Color3.fromRGB(100,200,255))
-rname.TextScaled = false rname.TextSize = 11
-
-local startBtn = Instance.new("TextButton", f)
-startBtn.Size, startBtn.Position = UDim2.new(0.47,0,0,34), UDim2.new(0,5,0,110)
-startBtn.BackgroundColor3 = Color3.fromRGB(40,180,80)
-startBtn.Text, startBtn.TextColor3, startBtn.Font = "▶ START", Color3.new(1,1,1), Enum.Font.GothamBold
-startBtn.TextScaled, startBtn.BorderSizePixel = true, 0
-Instance.new("UICorner", startBtn).CornerRadius = UDim.new(0,7)
-
-local stopBtn = Instance.new("TextButton", f)
-stopBtn.Size, stopBtn.Position = UDim2.new(0.47,0,0,34), UDim2.new(0.52,-2,0,110)
-stopBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
-stopBtn.Text, stopBtn.TextColor3, stopBtn.Font = "⏹ STOP", Color3.new(1,1,1), Enum.Font.GothamBold
-stopBtn.TextScaled, stopBtn.BorderSizePixel = true, 0
-Instance.new("UICorner", stopBtn).CornerRadius = UDim.new(0,7)
+local titleLbl = Instance.new("TextLabel", title)
+titleLbl.Size = UDim2.new(1, 0, 1, 0)
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text = "⭐ AUTO OPEN STARS v3"
+titleLbl.TextColor3 = Color3.fromRGB(15, 15, 25)
+titleLbl.TextScaled = true
+titleLbl.Font = Enum.Font.GothamBold
 
 -- Drag
 local drag, ds, dp = false
-f.InputBegan:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1 then drag=true; ds=i.Position; dp=f.Position end
+title.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        drag, ds, dp = true, i.Position, f.Position
+    end
 end)
-f.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag=false end end)
+title.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = false end
+end)
 UIS.InputChanged:Connect(function(i)
     if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
         local d = i.Position - ds
@@ -80,29 +77,150 @@ UIS.InputChanged:Connect(function(i)
     end
 end)
 
--- Lógica
-local function fire()
-    if not remote then return end
-    pcall(function()
-        if remote:IsA("RemoteEvent") then remote:FireServer()
-        else remote:InvokeServer() end
+-- Labels
+local function lbl(txt, y, col, sz)
+    local l = Instance.new("TextLabel", f)
+    l.Size = UDim2.new(1, -10, 0, 20)
+    l.Position = UDim2.new(0, 5, 0, y)
+    l.BackgroundTransparency = 1
+    l.Font = Enum.Font.GothamBold
+    l.Text = txt
+    l.TextColor3 = col or Color3.fromRGB(255, 220, 80)
+    if sz then l.TextSize = sz l.TextScaled = false
+    else l.TextScaled = true end
+    return l
+end
+
+local statusLbl  = lbl("Estado: ⏸ Detenido", 44, Color3.fromRGB(180,180,180))
+local counterLbl = lbl("⭐ Abiertos: 0", 66, Color3.fromRGB(255,220,80))
+local worldLbl   = lbl("🗺️ Mundo: World1", 88, Color3.fromRGB(100,200,255), 12)
+
+-- Separador
+local sep = Instance.new("Frame", f)
+sep.Size = UDim2.new(1, -20, 0, 1)
+sep.Position = UDim2.new(0, 10, 0, 112)
+sep.BackgroundColor3 = Color3.fromRGB(255,200,0)
+sep.BorderSizePixel = 0
+
+lbl("🗺️ SELECCIONAR MUNDO:", 118, Color3.fromRGB(255,200,0), 12)
+
+-- Scroll para mundos
+local scroll = Instance.new("ScrollingFrame", f)
+scroll.Size = UDim2.new(1, -10, 0, 185)
+scroll.Position = UDim2.new(0, 5, 0, 136)
+scroll.BackgroundColor3 = Color3.fromRGB(18, 18, 30)
+scroll.BorderSizePixel = 0
+scroll.ScrollBarThickness = 4
+scroll.ScrollBarImageColor3 = Color3.fromRGB(255,200,0)
+scroll.CanvasSize = UDim2.new(0, 0, 0, #WORLDS * 38)
+Instance.new("UICorner", scroll).CornerRadius = UDim.new(0, 8)
+
+local selectedBtn = nil
+
+for i, world in ipairs(WORLDS) do
+    local wb = Instance.new("TextButton", scroll)
+    wb.Size = UDim2.new(1, -8, 0, 32)
+    wb.Position = UDim2.new(0, 4, 0, (i-1)*36 + 4)
+    wb.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    wb.Text = world.name
+    wb.TextColor3 = Color3.fromRGB(200, 200, 200)
+    wb.Font = Enum.Font.GothamBold
+    wb.TextScaled = true
+    wb.BorderSizePixel = 0
+    Instance.new("UICorner", wb).CornerRadius = UDim.new(0, 6)
+
+    -- Highlight World1 por defecto
+    if i == 1 then
+        wb.BackgroundColor3 = Color3.fromRGB(255,180,0)
+        wb.TextColor3 = Color3.fromRGB(15,15,25)
+        selectedBtn = wb
+    end
+
+    wb.MouseButton1Click:Connect(function()
+        -- Deseleccionar anterior
+        if selectedBtn then
+            selectedBtn.BackgroundColor3 = Color3.fromRGB(30,30,50)
+            selectedBtn.TextColor3 = Color3.fromRGB(200,200,200)
+        end
+        -- Seleccionar nuevo
+        wb.BackgroundColor3 = Color3.fromRGB(255,180,0)
+        wb.TextColor3 = Color3.fromRGB(15,15,25)
+        selectedBtn = wb
+        selectedWorld = world.key
+        worldLbl.Text = "🗺️ Mundo: " .. world.key
     end)
-    count += 1
-    counter.Text = "Abiertos: "..count
+end
+
+-- Botones START / STOP
+local function mkbtn(txt, xScale, xOff, col)
+    local b = Instance.new("TextButton", f)
+    b.Size = UDim2.new(0.47, 0, 0, 36)
+    b.Position = UDim2.new(xScale, xOff, 0, 332)
+    b.BackgroundColor3 = col
+    b.Text = txt
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Font = Enum.Font.GothamBold
+    b.TextScaled = true
+    b.BorderSizePixel = 0
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+    return b
+end
+
+local startBtn = mkbtn("▶ START", 0, 10, Color3.fromRGB(40,180,80))
+local stopBtn  = mkbtn("⏹ STOP", 0.52, -2, Color3.fromRGB(200,50,50))
+
+-- Reset contador
+local resetBtn = Instance.new("TextButton", f)
+resetBtn.Size = UDim2.new(1, -10, 0, 26)
+resetBtn.Position = UDim2.new(0, 5, 0, 378)
+resetBtn.BackgroundColor3 = Color3.fromRGB(40,40,60)
+resetBtn.Text = "🔄 Reset contador"
+resetBtn.TextColor3 = Color3.fromRGB(160,160,160)
+resetBtn.Font = Enum.Font.Gotham
+resetBtn.TextScaled = true
+resetBtn.BorderSizePixel = 0
+Instance.new("UICorner", resetBtn).CornerRadius = UDim.new(0,6)
+
+resetBtn.MouseButton1Click:Connect(function()
+    count = 0
+    counterLbl.Text = "⭐ Abiertos: 0"
+end)
+
+-- ► Función abrir estrella
+local function openStar()
+    local ok, res = pcall(function()
+        return BuyTicket:InvokeServer(selectedWorld)
+    end)
+    if ok then
+        count += 1
+        counterLbl.Text = "⭐ Abiertos: " .. count
+    else
+        -- Intenta sin argumento
+        pcall(function()
+            BuyTicket:InvokeServer()
+            count += 1
+            counterLbl.Text = "⭐ Abiertos: " .. count
+        end)
+    end
 end
 
 startBtn.MouseButton1Click:Connect(function()
-    if not remote then status.Text="Remote no encontrado"; return end
+    if autoOn then return end
     autoOn = true
-    status.Text, status.TextColor3 = "Estado: ✅ Activo", Color3.fromRGB(80,255,120)
+    statusLbl.Text = "Estado: ✅ Activo — " .. selectedWorld
+    statusLbl.TextColor3 = Color3.fromRGB(80,255,120)
     task.spawn(function()
-        while autoOn do fire(); task.wait(delay) end
+        while autoOn do
+            openStar()
+            task.wait(delay)
+        end
     end)
 end)
 
 stopBtn.MouseButton1Click:Connect(function()
     autoOn = false
-    status.Text, status.TextColor3 = "Estado: ⏸ Detenido", Color3.fromRGB(180,180,180)
+    statusLbl.Text = "Estado: ⏸ Detenido"
+    statusLbl.TextColor3 = Color3.fromRGB(180,180,180)
 end)
 
-print("[AutoStar] Cargado | Remote: "..(remote and remote.Name or "N/A"))
+print("[AutoStar v3] ✅ Listo con selector de mundos")
