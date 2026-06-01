@@ -17,16 +17,30 @@ local ISLANDS = {
 local old = PG:FindFirstChild("AutoStarV4")
 if old then old:Destroy() end
 
+-- Paths exactos encontrados
+local function getStarWindow()
+    return PG:FindFirstChild("Windows") and
+           PG.Windows:FindFirstChild("Star")
+end
+
 local function clickOpen()
-    pcall(function()
-        PG.Windows.Star.Content.Buttons.Open.MouseButton1Click:Fire()
-    end)
+    local star = getStarWindow()
+    if star and star.Enabled then
+        pcall(function()
+            star.Content.Buttons.Open.MouseButton1Click:Fire()
+        end)
+        return true
+    end
+    return false
 end
 
 local function clickAuto()
-    pcall(function()
-        PG.Windows.Star.Content.Buttons.Auto.MouseButton1Click:Fire()
-    end)
+    local star = getStarWindow()
+    if star then
+        pcall(function()
+            star.Content.Buttons.Auto.MouseButton1Click:Fire()
+        end)
+    end
 end
 
 -- GUI
@@ -48,7 +62,7 @@ Instance.new("UICorner", icon).CornerRadius = UDim.new(0.5,0)
 
 -- Frame principal
 local f = Instance.new("Frame", gui)
-f.Size = UDim2.new(0,260,0,430)
+f.Size = UDim2.new(0,260,0,450)
 f.Position = UDim2.new(0,20,0.08,0)
 f.BackgroundColor3 = Color3.fromRGB(12,12,22)
 f.BorderSizePixel = 0
@@ -109,8 +123,8 @@ local function lbl(parent, txt, y, col, sz)
     l.Font = Enum.Font.GothamBold
     l.Text = txt
     l.TextColor3 = col or Color3.fromRGB(255,220,80)
-    if sz then l.TextSize = sz l.TextScaled = false
-    else l.TextScaled = true end
+    if sz then l.TextSize=sz l.TextScaled=false
+    else l.TextScaled=true end
     return l
 end
 
@@ -118,17 +132,20 @@ local statusLbl  = lbl(content,"Estado: ⏸ Detenido", 5, Color3.fromRGB(180,180
 local counterLbl = lbl(content,"⭐ Abiertos: 0", 28, Color3.fromRGB(255,220,80))
 local islandLbl  = lbl(content,"Isla: Ninja Village", 50, Color3.fromRGB(100,200,255), 11)
 
+-- Indicador menú abierto
+local menuStatus = lbl(content,"🔴 Menú Stars: cerrado", 70, Color3.fromRGB(255,80,80), 11)
+
 local sep = Instance.new("Frame", content)
 sep.Size = UDim2.new(1,-20,0,1)
-sep.Position = UDim2.new(0,10,0,74)
+sep.Position = UDim2.new(0,10,0,95)
 sep.BackgroundColor3 = Color3.fromRGB(255,200,0)
 sep.BorderSizePixel = 0
 
-lbl(content,"🗺️ SELECCIONAR ISLA:", 80, Color3.fromRGB(255,200,0), 12)
+lbl(content,"🗺️ SELECCIONAR ISLA:", 101, Color3.fromRGB(255,200,0), 12)
 
 local scroll = Instance.new("ScrollingFrame", content)
-scroll.Size = UDim2.new(1,-10,0,175)
-scroll.Position = UDim2.new(0,5,0,98)
+scroll.Size = UDim2.new(1,-10,0,160)
+scroll.Position = UDim2.new(0,5,0,118)
 scroll.BackgroundColor3 = Color3.fromRGB(18,18,30)
 scroll.BorderSizePixel = 0
 scroll.ScrollBarThickness = 4
@@ -178,12 +195,12 @@ local function mkbtn(parent, txt, xScale, xOff, y, col)
     return b
 end
 
-local startBtn = mkbtn(content,"▶ START", 0, 10, 282, Color3.fromRGB(40,180,80))
-local stopBtn  = mkbtn(content,"⏹ STOP", 0.52,-2, 282, Color3.fromRGB(200,50,50))
+local startBtn = mkbtn(content,"▶ START", 0, 10, 288, Color3.fromRGB(40,180,80))
+local stopBtn  = mkbtn(content,"⏹ STOP", 0.52,-2, 288, Color3.fromRGB(200,50,50))
 
 local autoGameBtn = Instance.new("TextButton", content)
 autoGameBtn.Size = UDim2.new(1,-10,0,30)
-autoGameBtn.Position = UDim2.new(0,5,0,323)
+autoGameBtn.Position = UDim2.new(0,5,0,330)
 autoGameBtn.BackgroundColor3 = Color3.fromRGB(80,60,200)
 autoGameBtn.Text = "🔁 Activar AUTO! del juego"
 autoGameBtn.TextColor3 = Color3.new(1,1,1)
@@ -194,7 +211,7 @@ Instance.new("UICorner", autoGameBtn).CornerRadius = UDim.new(0,8)
 
 local resetBtn = Instance.new("TextButton", content)
 resetBtn.Size = UDim2.new(1,-10,0,26)
-resetBtn.Position = UDim2.new(0,5,0,360)
+resetBtn.Position = UDim2.new(0,5,0,368)
 resetBtn.BackgroundColor3 = Color3.fromRGB(40,40,60)
 resetBtn.Text = "🔄 Reset contador"
 resetBtn.TextColor3 = Color3.fromRGB(160,160,160)
@@ -202,6 +219,21 @@ resetBtn.Font = Enum.Font.Gotham
 resetBtn.TextScaled = true
 resetBtn.BorderSizePixel = 0
 Instance.new("UICorner", resetBtn).CornerRadius = UDim.new(0,6)
+
+-- Monitor estado menú stars
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        local star = getStarWindow()
+        if star and star.Enabled then
+            menuStatus.Text = "🟢 Menú Stars: abierto ✅"
+            menuStatus.TextColor3 = Color3.fromRGB(80,255,120)
+        else
+            menuStatus.Text = "🔴 Menú Stars: cerrado"
+            menuStatus.TextColor3 = Color3.fromRGB(255,80,80)
+        end
+    end
+end)
 
 -- Drag frame
 local drag, ds, dp = false
@@ -233,11 +265,10 @@ UIS.InputChanged:Connect(function(i)
     end
 end)
 
--- Botones lógica
 minBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
     content.Visible = not minimized
-    f.Size = minimized and UDim2.new(0,260,0,40) or UDim2.new(0,260,0,430)
+    f.Size = minimized and UDim2.new(0,260,0,40) or UDim2.new(0,260,0,450)
     minBtn.Text = minimized and "▢" or "—"
 end)
 
@@ -256,14 +287,26 @@ end)
 
 startBtn.MouseButton1Click:Connect(function()
     if autoOn then return end
+    local star = getStarWindow()
+    if not star or not star.Enabled then
+        statusLbl.Text = "⚠️ Abre el menú de Stars primero"
+        statusLbl.TextColor3 = Color3.fromRGB(255,200,0)
+        return
+    end
     autoOn = true
     statusLbl.Text = "Estado: ✅ Abriendo..."
     statusLbl.TextColor3 = Color3.fromRGB(80,255,120)
     task.spawn(function()
         while autoOn do
-            clickOpen()
-            count += 1
-            counterLbl.Text = "⭐ Abiertos: "..count
+            local ok = clickOpen()
+            if ok then
+                count += 1
+                counterLbl.Text = "⭐ Abiertos: "..count
+            else
+                statusLbl.Text = "⚠️ Menú cerrado, pausado"
+                statusLbl.TextColor3 = Color3.fromRGB(255,200,0)
+                task.wait(1)
+            end
             task.wait(0.4)
         end
     end)
